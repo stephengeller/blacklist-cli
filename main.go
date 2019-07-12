@@ -3,13 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/stephengeller/pomodoro/file_processor"
+	"github.com/stephengeller/pomodoro/internal"
 )
 
 const dummyHosts = "/tmp/dummyhosts"
+
+var logger = &internal.DefaultLogger{}
 
 func main() {
 	bl := flag.String("blacklist", "", "Path to blacklist file")
@@ -20,27 +22,18 @@ func main() {
 	minutesToWait := *mtw
 
 	sitesToBlacklist, err := FileProcessor.ReadFile(blacklist)
-
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
+	internal.Check(logger, err)
 
 	err = FileProcessor.AddLinesToFile(dummyHosts, sitesToBlacklist)
-
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
+	internal.Check(logger, err)
 
 	fmt.Printf("Timer running for %s...\n", minutesToWait.String())
+
 	timer1 := time.NewTimer(minutesToWait)
 	<-timer1.C
-	fmt.Printf("%d minute timer expired\n", minutesToWait)
-	err = FileProcessor.RemoveLinesFromFile(dummyHosts, sitesToBlacklist)
 
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
+	fmt.Printf("%d minute timer expired\n", minutesToWait)
+
+	err = FileProcessor.RemoveLinesFromFile(dummyHosts, sitesToBlacklist)
+	internal.Check(logger, err)
 }
